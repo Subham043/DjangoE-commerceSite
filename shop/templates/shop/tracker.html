@@ -1,0 +1,74 @@
+{% extends 'shop/base.html' %}
+{% block title %}Shopify-Tracker{% endblock %}
+{% block content %}
+<div class="container">
+	<div class="col my-4">
+	<h2>Track your your order:</h2>
+	<form action="#" id="trackerForm" method="post">{% csrf_token %}
+		<input type="hidden" name="itemsJson" id="itemsJson">
+  <div class="form-row">
+  	<div class="form-group col-md-6">
+      <label for="inputName">Order_ID</label>
+      <input type="text" class="form-control" id="orderId" name="orderId">
+    </div>
+    <div class="form-group col-md-6">
+      <label for="inputEmail4">Email</label>
+      <input type="email" class="form-control" id="email" name="email">
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Track Order</button>
+</form>
+</div>
+<div class="col my-4">
+	<h2>Your order status:</h2>
+	<div>
+		<ul class="list-group mt-4" id="items">
+		  {{order.id}}
+		</ul>
+	</div>
+
+</div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+	$('#trackerForm').submit(function(event){
+
+		$('#items').empty();
+		var formData = {
+			'orderId': $('input[name=orderId]').val(),
+			'email': $('input[name=email]').val(),
+			'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+		};
+		$.ajax({
+			type:'POST',
+			url:'/shop/tracker/',
+			data:formData,
+			encode:true
+		})
+
+		.done(function(data){
+			updates=JSON.parse(data);
+			if(updates.length>0 & updates!={}){
+				for(i = 0;i < updates.length;i++){
+				  	let text = updates[i]['text'];
+				  	let time = updates[i]['time'];
+				  	mystr = `<li class="list-group-item d-flex justify-content-between align-items-center">
+						    ${text}
+						    <span class="badge badge-primary badge-pill">${time}</span>
+						  </li>`;
+					$('#items').append(mystr);
+				}
+			}
+			else{
+					mystr = `<li class="list-group-item d-flex justify-content-between align-items-center">
+						    Sorry, We are unable to fetch the order id and email. Make sure to type the correct  order ID and email!!
+						  </li>`;
+					$('#items').append(mystr);
+			}
+			
+		});
+		event.preventDefault();
+	});
+</script>
+{% endblock %}
